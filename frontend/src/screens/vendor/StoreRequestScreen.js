@@ -9,7 +9,7 @@ import { STORE_CATEGORIES } from '../../constants/storeConstants';
 
 const StoreRequestScreen = () => {
   const [name, setName] = useState('');
-  const [image, setImage] = useState(''); // This holds the Cloudinary URL after successful upload
+  const [image, setImage] = useState(''); // Holds the Cloudinary URL
   const [category, setCategory] = useState(STORE_CATEGORIES[0]);
   const [area, setArea] = useState('');
   const [city, setCity] = useState('');
@@ -20,15 +20,15 @@ const StoreRequestScreen = () => {
   const { state } = useStore();
   const { userInfo } = state;
 
-  // Upload Image Handler
+  // Upload Image Handler - Automatically triggers on file selection
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
+    if (!file) return; 
+
     const formData = new FormData();
     formData.append('image', file);
     setLoadingUpload(true);
-    
-    // Reset image state while uploading to prevent submitting stale data
-    setImage(''); 
+    setImage(''); // Clear previous image state during upload
     
     try {
       const config = {
@@ -37,16 +37,18 @@ const StoreRequestScreen = () => {
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
+      
       const { data } = await axios.post('/api/upload', formData, config);
       
-      // ✅ FIX: AUTO-FILLS the 'image' state with the URL returned from the backend
-      // (Assumes your backend returns the URL in data.image)
+      // ✅ SUCCESS: Set the state with the URL from the backend
       setImage(data.image); 
       
-      toast.success('Image uploaded successfully!');
+      toast.success('Image uploaded successfully! Ready to submit.');
     } catch (err) {
-      toast.error('Image upload failed.');
+      toast.error('Image upload failed. Please try again.');
     } finally {
+      // Ensure file input is cleared for next upload attempt
+      e.target.value = null; 
       setLoadingUpload(false);
     }
   };
@@ -55,7 +57,7 @@ const StoreRequestScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     
-    // ✅ FIX: Client-side validation to ensure an image was uploaded
+    // Client-side validation: must have a non-empty image URL
     if (!image) {
       toast.error('Please upload a store image before submitting the request.');
       return;
@@ -67,7 +69,7 @@ const StoreRequestScreen = () => {
         '/api/stores/request',
         {
           name,
-          image, // Sent from state, which contains the Cloudinary URL
+          image,
           category,
           address: { area, city, district },
         },
@@ -78,7 +80,7 @@ const StoreRequestScreen = () => {
       toast.success(
         'Store creation request sent to Admin successfully! Please wait for approval.'
       );
-      // Reset form
+      // Reset form on success
       setName('');
       setImage('');
       setArea('');
@@ -87,9 +89,7 @@ const StoreRequestScreen = () => {
       setCategory(STORE_CATEGORIES[0]);
     } catch (err) {
       toast.error(
-        err.response && err.response.data.message
-          ? err.response.data.message
-          : err.message
+        err.response?.data?.message || err.message
       );
     } finally {
       setLoading(false);
@@ -132,28 +132,35 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* 🚨 MODIFIED: Image Upload Field (Manual URL input REMOVED) */}
+        {/* 🚀 Image Upload Field (Improved Feedback) */}
         <Form.Group controlId="image-upload" className="mb-3">
           <Form.Label className="fw-bold">Store Image</Form.Label>
-          <p className="text-muted small mb-1">Upload the main store image.</p>
+          <p className="text-muted small mb-1">
+            {image ? 'Image ready to submit.' : 'Upload the main store image.'}
+          </p>
+          
+          {/* File input is disabled while uploading to prevent interruption */}
           <Form.Control
             type="file"
             onChange={uploadFileHandler}
-            disabled={loadingUpload}
+            disabled={loadingUpload} 
           />
-          {loadingUpload && <p className="text-muted mt-2">Uploading image...</p>}
+          
+          {/* User Feedback */}
+          {loadingUpload && <p className="text-info mt-2">Uploading image... Please wait.</p>}
         </Form.Group>
         
         {/* Visual Confirmation of Successful Upload */}
-        {image && (
+        {image && !loadingUpload && (
           <p className="text-success small">
-            <i className="fas fa-check-circle"></i> Upload Complete: Image URL is ready.
+            <i className="fas fa-check-circle"></i> Upload Complete: Ready to submit request.
           </p>
         )}
 
         {/* Address Fields (Unchanged) */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
         <Row>
+          {/* ... Area, City, District fields (JSX omitted for brevity, but they remain) ... */}
           <Col md={4}>
             <Form.Group className="mb-3" controlId="area">
               <Form.Label>Area</Form.Label>
@@ -193,7 +200,8 @@ const StoreRequestScreen = () => {
         </Row>
 
         <Button 
-          disabled={loading || loadingUpload || !image} // Button disabled if no image is uploaded
+          // Button is disabled only when submitting, uploading, or when no image is ready
+          disabled={loading || loadingUpload || !image} 
           type="submit" 
           variant="primary" 
           className="w-100 mt-4"
