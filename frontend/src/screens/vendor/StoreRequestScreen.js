@@ -40,15 +40,14 @@ const StoreRequestScreen = () => {
       
       const { data } = await axios.post('/api/upload', formData, config);
       
-      // ✅ SUCCESS: Set the state with the URL from the backend
-      setImage(data.image); 
+      setImage(data.image); // State is set with the Cloudinary URL
       
       toast.success('Image uploaded successfully! Ready to submit.');
     } catch (err) {
       toast.error('Image upload failed. Please try again.');
-    } finally {
-      // Ensure file input is cleared for next upload attempt
+      // IMPORTANT: Clear the input file *only* on failure to encourage re-upload
       e.target.value = null; 
+    } finally {
       setLoadingUpload(false);
     }
   };
@@ -132,14 +131,13 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* 🚀 Image Upload Field (Improved Feedback) */}
+        {/* Image Upload Field */}
         <Form.Group controlId="image-upload" className="mb-3">
           <Form.Label className="fw-bold">Store Image</Form.Label>
           <p className="text-muted small mb-1">
             {image ? 'Image ready to submit.' : 'Upload the main store image.'}
           </p>
           
-          {/* File input is disabled while uploading to prevent interruption */}
           <Form.Control
             type="file"
             onChange={uploadFileHandler}
@@ -160,7 +158,6 @@ const StoreRequestScreen = () => {
         {/* Address Fields (Unchanged) */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
         <Row>
-          {/* ... Area, City, District fields (JSX omitted for brevity, but they remain) ... */}
           <Col md={4}>
             <Form.Group className="mb-3" controlId="area">
               <Form.Label>Area</Form.Label>
@@ -200,8 +197,8 @@ const StoreRequestScreen = () => {
         </Row>
 
         <Button 
-          // Button is disabled only when submitting, uploading, or when no image is ready
-          //disabled={loading || loadingUpload || !image} 
+          // 🚨 Button is now disabled only when busy (loading or uploading)
+          disabled={loading || loadingUpload} 
           type="submit" 
           variant="primary" 
           className="w-100 mt-4"
