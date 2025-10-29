@@ -1,0 +1,63 @@
+/* General Cleanliness and Professionalism */
+
+:root {
+  --primary-color: #007bff; /* Bootstrap Primary */
+  --secondary-color: #6c757d; /* Bootstrap Secondary */
+  --light-bg: #f8f9fa; /* Light grey background */
+}
+
+body {
+  background-color: var(--light-bg);
+  color: #333;
+}
+
+/* Ensure the layout occupies full height */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1 0 auto; /* Allow content to grow but take up minimum space */
+}
+
+/* Standard Padding */
+.py-3 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+/* Rating Stars */
+.rating span {
+  margin: 0.1rem;
+}
+
+/* Footer Styling */
+footer {
+  background-color: #343a40; /* Dark background */
+  color: white;
+  flex-shrink: 0; /* Prevents the footer from shrinking */
+}
+
+/* Link Styling for a professional look */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Navbar Search Fix */
+.navbar-nav .form-control {
+    width: 250px; /* Default width for search bar */
+}
+/* Adjust search bar width on smaller screens */
+@media (max-width: 991px) {
+    .navbar-nav .form-control {
+        width: 100%;
+        margin-right: 0 !important;
+    }
+}
