@@ -28,7 +28,7 @@ const StoreRequestScreen = () => {
     const formData = new FormData();
     formData.append('image', file);
     
-    // Clear previous URL and start loading
+    // 1. Clear previous URL to show new upload started
     setImage(''); 
     setLoadingUpload(true);
     
@@ -41,7 +41,7 @@ const StoreRequestScreen = () => {
       };
       const { data } = await axios.post('/api/upload', formData, config);
         
-      setImage(data.image); // State is set with the Cloudinary URL
+      setImage(data.image); // Success: Set the URL
       toast.success('Image uploaded successfully! Ready to submit.');
     } catch (err) {
       toast.error('Image upload failed. Please try again.');
@@ -51,16 +51,20 @@ const StoreRequestScreen = () => {
     }
   };
 
-  // Submit Request Handler (Image is optional on client-side, required by server if necessary)
+  // Submit Request Handler 
   const submitHandler = async (e) => {
     e.preventDefault();
+    
+    // This client-side check ensures they provided required non-image fields.
+    // Image is sent as an empty string if not uploaded (since it's optional).
+    
     setLoading(true);
     try {
       await axios.post(
         '/api/stores/request',
         {
           name,
-          image, // Will be empty string if no image was uploaded
+          image, // Will be empty string or Cloudinary URL
           category,
           address: { area, city, district },
         },
@@ -80,9 +84,7 @@ const StoreRequestScreen = () => {
       setCategory(STORE_CATEGORIES[0]); 
     } catch (err) {
       toast.error(
-        err.response && err.response.data.message
-          ? err.response.data.message
-          : err.message
+        err.response?.data?.message || err.message
       );
     } finally {
       setLoading(false);
@@ -124,12 +126,9 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* 🚀 Cleaned-up Image Upload Field */}
+        {/* Streamlined Image Upload Field for clean alignment */}
         <Form.Group controlId="image-upload" className="mb-3">
-          <Form.Label className="fw-bold">Store Image</Form.Label>
-          <p className="text-muted small mb-1">
-            {image ? 'Image successfully uploaded.' : 'Upload the main store image (Optional).'}
-          </p>
+          <Form.Label className="fw-bold">Store Image (Optional)</Form.Label>
           
           <Form.Control
             type="file"
@@ -137,16 +136,17 @@ const StoreRequestScreen = () => {
             disabled={loadingUpload} 
           />
           
-          {/* User Feedback */}
-          {loadingUpload && <p className="text-info mt-2">Uploading image... Please wait.</p>}
+          {/* Conditional User Feedback */}
+          {loadingUpload && <p className="text-info small mt-2">Uploading image... Please wait.</p>}
+          {/* Show confirmation that the URL state is set */}
           {image && !loadingUpload && (
             <p className="text-success small mt-2">
-              <i className="fas fa-check-circle"></i> Image URL Set: Ready to submit.
+              <i className="fas fa-check-circle"></i> Image URL set successfully.
             </p>
           )}
         </Form.Group>
         
-        {/* Address Fields */}
+        {/* Store Address Fields (Unchanged, using Row/Col for good alignment) */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
         <Row>
           <Col md={4}>
@@ -187,7 +187,13 @@ const StoreRequestScreen = () => {
           </Col>
         </Row>
 
-        <Button disabled={loading || loadingUpload} type="submit" variant="primary" className="w-100 mt-4">
+        <Button 
+          // Disabled if form is submitting OR image is actively uploading
+          disabled={loading || loadingUpload} 
+          type="submit" 
+          variant="primary" 
+          className="w-100 mt-4"
+        >
           {loading ? 'Submitting Request...' : 'Submit Store Request'}
         </Button>
       </Form>
