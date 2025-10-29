@@ -1,3 +1,5 @@
+// frontend/src/screens/StoreRequestScreen.js
+
 import React, { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -9,7 +11,7 @@ import { STORE_CATEGORIES } from '../../constants/storeConstants';
 
 const StoreRequestScreen = () => {
   const [name, setName] = useState('');
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState(''); // This holds the Cloudinary URL after successful upload
   const [category, setCategory] = useState(STORE_CATEGORIES[0]);
   const [area, setArea] = useState('');
   const [city, setCity] = useState('');
@@ -30,12 +32,15 @@ const StoreRequestScreen = () => {
       const config = {
         headers: {
           'Content-Type': 'multipart/form-data',
-          // 🔥 MODIFICATION: Added Authorization header for /api/upload for security/consistency
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
       const { data } = await axios.post('/api/upload', formData, config);
-      setImage(data.image);
+      
+      // ✅ FIX: This line AUTO-FILLS the 'image' state with the URL returned from the backend
+      // Ensure your backend returns the URL as data.image
+      setImage(data.image); 
+      
       toast.success('Image uploaded successfully!');
     } catch (err) {
       toast.error('Image upload failed.');
@@ -47,13 +52,20 @@ const StoreRequestScreen = () => {
   // Submit Request Handler
   const submitHandler = async (e) => {
     e.preventDefault();
+    
+    // ✅ FIX: Client-side validation to ensure an image was uploaded
+    if (!image) {
+      toast.error('Please upload a store image before submitting the request.');
+      return;
+    }
+    
     setLoading(true);
     try {
       await axios.post(
         '/api/stores/request',
         {
           name,
-          image,
+          image, // Sent from state, which was set by the successful upload
           category,
           address: { area, city, district },
         },
@@ -70,7 +82,7 @@ const StoreRequestScreen = () => {
       setArea('');
       setCity('');
       setDistrict('');
-      setCategory(STORE_CATEGORIES[0]); // Reset category to default
+      setCategory(STORE_CATEGORIES[0]);
     } catch (err) {
       toast.error(
         err.response && err.response.data.message
@@ -89,6 +101,8 @@ const StoreRequestScreen = () => {
       </Helmet>
       <h1 className="text-center mb-4 text-primary">Request New Store</h1>
       <Form onSubmit={submitHandler} className="p-3 border rounded shadow-sm bg-white">
+        
+        {/* Store Name Field (Unchanged) */}
         <Form.Group className="mb-3" controlId="name">
           <Form.Label className="fw-bold">Store Name</Form.Label>
           <Form.Control
@@ -100,6 +114,7 @@ const StoreRequestScreen = () => {
           ></Form.Control>
         </Form.Group>
 
+        {/* Category Field (Unchanged) */}
         <Form.Group className="mb-3" controlId="category">
           <Form.Label className="fw-bold">Category</Form.Label>
           <Form.Select
@@ -115,17 +130,9 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* Image Upload */}
-        <Form.Group controlId="image" className="mb-3">
-          <Form.Label className="fw-bold">Store Image URL</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter image URL"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            required
-          ></Form.Control>
-          <Form.Label className="mt-2 text-muted small">Or Upload Image</Form.Label>
+        {/* 🚨 MODIFIED: Image Upload Field (No manual URL input) */}
+        <Form.Group controlId="image-upload" className="mb-3">
+          <Form.Label className="fw-bold">Store Image</Form.Label>
           <Form.Control
             type="file"
             onChange={uploadFileHandler}
@@ -133,10 +140,17 @@ const StoreRequestScreen = () => {
           />
           {loadingUpload && <p className="text-muted mt-2">Uploading image...</p>}
         </Form.Group>
-        {image && <p className="text-success small">Image Path: **{image}**</p>}
+        
+        {/* Visual Confirmation of Successful Upload */}
+        {image && (
+          <p className="text-success small">
+            <i className="fas fa-check-circle"></i> Image uploaded and URL set successfully.
+          </p>
+        )}
 
-        {/* Address Fields */}
+        {/* Address Fields (Unchanged) */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
+        {/* ... (Address fields JSX remain here) ... */}
         <Row>
           <Col md={4}>
             <Form.Group className="mb-3" controlId="area">
@@ -176,7 +190,12 @@ const StoreRequestScreen = () => {
           </Col>
         </Row>
 
-        <Button disabled={loading || loadingUpload} type="submit" variant="primary" className="w-100 mt-4">
+        <Button 
+          disabled={loading || loadingUpload || !image} // Button disabled if no image is uploaded
+          type="submit" 
+          variant="primary" 
+          className="w-100 mt-4"
+        >
           {loading ? 'Submitting Request...' : 'Submit Store Request'}
         </Button>
       </Form>
