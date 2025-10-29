@@ -45,7 +45,7 @@ const StoreRequestScreen = () => {
       toast.success('Image uploaded successfully! Ready to submit.');
     } catch (err) {
       toast.error('Image upload failed. Please try again.');
-      // IMPORTANT: Clear the input file *only* on failure to encourage re-upload
+      // Clear input on failure to allow user to try uploading the same file again
       e.target.value = null; 
     } finally {
       setLoadingUpload(false);
@@ -56,11 +56,8 @@ const StoreRequestScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     
-    // Client-side validation: must have a non-empty image URL
-    if (!image) {
-      toast.error('Please upload a store image before submitting the request.');
-      return;
-    }
+    // 🚨 FIX: Client-side validation removed! Image is now truly optional.
+    // The image will be sent as an empty string if not uploaded.
     
     setLoading(true);
     try {
@@ -68,7 +65,7 @@ const StoreRequestScreen = () => {
         '/api/stores/request',
         {
           name,
-          image,
+          image, // Sent as empty string or Cloudinary URL
           category,
           address: { area, city, district },
         },
@@ -135,7 +132,7 @@ const StoreRequestScreen = () => {
         <Form.Group controlId="image-upload" className="mb-3">
           <Form.Label className="fw-bold">Store Image</Form.Label>
           <p className="text-muted small mb-1">
-            {image ? 'Image ready to submit.' : 'Upload the main store image.'}
+            {image ? 'Image ready to submit.' : 'Upload the main store image (Optional).'}
           </p>
           
           <Form.Control
@@ -197,7 +194,7 @@ const StoreRequestScreen = () => {
         </Row>
 
         <Button 
-          // 🚨 Button is now disabled only when busy (loading or uploading)
+          // Button is now disabled only when busy (loading or uploading)
           disabled={loading || loadingUpload} 
           type="submit" 
           variant="primary" 
