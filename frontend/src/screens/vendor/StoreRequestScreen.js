@@ -1,5 +1,3 @@
-// frontend/src/screens/StoreRequestScreen.js
-
 import React, { useState } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -28,6 +26,10 @@ const StoreRequestScreen = () => {
     const formData = new FormData();
     formData.append('image', file);
     setLoadingUpload(true);
+    
+    // Reset image state while uploading to prevent submitting stale data
+    setImage(''); 
+    
     try {
       const config = {
         headers: {
@@ -37,8 +39,8 @@ const StoreRequestScreen = () => {
       };
       const { data } = await axios.post('/api/upload', formData, config);
       
-      // ✅ FIX: This line AUTO-FILLS the 'image' state with the URL returned from the backend
-      // Ensure your backend returns the URL as data.image
+      // ✅ FIX: AUTO-FILLS the 'image' state with the URL returned from the backend
+      // (Assumes your backend returns the URL in data.image)
       setImage(data.image); 
       
       toast.success('Image uploaded successfully!');
@@ -65,7 +67,7 @@ const StoreRequestScreen = () => {
         '/api/stores/request',
         {
           name,
-          image, // Sent from state, which was set by the successful upload
+          image, // Sent from state, which contains the Cloudinary URL
           category,
           address: { area, city, district },
         },
@@ -130,9 +132,10 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* 🚨 MODIFIED: Image Upload Field (No manual URL input) */}
+        {/* 🚨 MODIFIED: Image Upload Field (Manual URL input REMOVED) */}
         <Form.Group controlId="image-upload" className="mb-3">
           <Form.Label className="fw-bold">Store Image</Form.Label>
+          <p className="text-muted small mb-1">Upload the main store image.</p>
           <Form.Control
             type="file"
             onChange={uploadFileHandler}
@@ -144,13 +147,12 @@ const StoreRequestScreen = () => {
         {/* Visual Confirmation of Successful Upload */}
         {image && (
           <p className="text-success small">
-            <i className="fas fa-check-circle"></i> Image uploaded and URL set successfully.
+            <i className="fas fa-check-circle"></i> Upload Complete: Image URL is ready.
           </p>
         )}
 
         {/* Address Fields (Unchanged) */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
-        {/* ... (Address fields JSX remain here) ... */}
         <Row>
           <Col md={4}>
             <Form.Group className="mb-3" controlId="area">
