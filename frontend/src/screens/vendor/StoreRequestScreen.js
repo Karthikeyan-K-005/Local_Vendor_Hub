@@ -201,7 +201,7 @@ const StoreRequestScreen = () => {
 
         <Button 
           // Button is disabled only when submitting, uploading, or when no image is ready
-          disabled={loading || loadingUpload || !image} 
+          //disabled={loading || loadingUpload || !image} 
           type="submit" 
           variant="primary" 
           className="w-100 mt-4"
