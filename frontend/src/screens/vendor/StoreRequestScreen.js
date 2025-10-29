@@ -28,7 +28,7 @@ const StoreRequestScreen = () => {
     const formData = new FormData();
     formData.append('image', file);
     
-    // 1. Reset image state and set loading before network call
+    // Reset image state and set loading before network call
     setImage(''); 
     setLoadingUpload(true);
     
@@ -41,7 +41,7 @@ const StoreRequestScreen = () => {
       };
       const { data } = await axios.post('/api/upload', formData, config);
         
-      // 2. SUCCESS: Auto-fill the state (and thus the text input) with the URL
+      // SUCCESS: Auto-fill the state (and thus the text input) with the URL
       setImage(data.image); 
       toast.success('Image uploaded and URL filled successfully!');
     } catch (err) {
@@ -56,7 +56,6 @@ const StoreRequestScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // NOTE: Backend will now enforce if the image is truly required.
     try {
       await axios.post(
         '/api/stores/request',
@@ -126,7 +125,7 @@ const StoreRequestScreen = () => {
           </Form.Select>
         </Form.Group>
 
-        {/* 🚀 MODIFIED Image Upload Section */}
+        {/* Image Upload Section */}
         <Form.Group controlId="image" className="mb-3">
           <Form.Label className="fw-bold">Store Image URL</Form.Label>
           <Form.Control
@@ -134,7 +133,6 @@ const StoreRequestScreen = () => {
             placeholder="Enter image URL or upload below"
             value={image}
             onChange={(e) => setImage(e.target.value)}
-            // 🛑 FIX: Removed 'required' attribute to prevent popup error
           ></Form.Control>
           <Form.Label className="mt-2 text-muted small">Or Upload Image</Form.Label>
           <Form.Control
@@ -147,7 +145,7 @@ const StoreRequestScreen = () => {
           {image && !loadingUpload && <p className="text-success small">Image URL Set: **{image.substring(0, 50)}...**</p>}
         </Form.Group>
         
-        {/* Address Fields (Unchanged) */}
+        {/* Address Fields */}
         <h5 className="mt-4 mb-3 text-secondary">Store Address</h5>
         <Row>
           <Col md={4}>
@@ -176,7 +174,7 @@ const StoreRequestScreen = () => {
           </Col>
           <Col md={4}>
             <Form.Group className="mb-3" controlId="district">
-              <Form.Label>District</Label>
+              <Form.Label>District</Form.Label> {/* 🚀 FIX: Correct closing tag added */}
               <Form.Control
                 type="text"
                 placeholder="Enter district"
